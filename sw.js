@@ -4,7 +4,8 @@
    - NLSC 底圖圖磚：看過才存，全部圖層合計有張數上限，超過刪最舊的
    - Firestore 連線不經過這裡（由 Firebase 自己的離線快取處理）
    改了這個檔才需要把 VER 加一；只改 index.html 不用動。 */
-const VER='v2';  // v2：manifest id 改 /landviewer/（原本 ./ 會解析成網域根目錄，和選點 App 的 id 撞在一起）
+const VER='v3';  // v3：manifest 改先抓網路（不再先用快取），index.html 的 manifest 連結加 ?v=3
+// v2：  manifest id 改 /landviewer/（原本 ./ 會解析成網域根目錄，和選點 App 的 id 撞在一起）
 const SHELL='cv-shell-'+VER, LIB='cv-lib-'+VER, TILE='cv-tile';
 const NET_WAIT=4000;
 const TILE_MAX_CORS=2000, TILE_MAX_OPAQUE=300; /* 沒有 CORS 的圖磚（opaque）佔配額很大，上限放小 */
@@ -17,7 +18,7 @@ const LIB_URLS=[
 const LIB_HOSTS=['cdnjs.cloudflare.com','fonts.googleapis.com','fonts.gstatic.com'];
 const SCOPE=self.registration.scope;
 const PAGE_KEY=SCOPE; /* index.html 不論網址怎麼寫都存在同一把 key */
-const ICONS=['manifest.json','icon-192.png','icon-512.png','apple-touch-icon.png'];
+const ICONS=['icon-192.png','icon-512.png','apple-touch-icon.png'];
 function pageKey(u){const p=u.origin+u.pathname;return(p===SCOPE||p===SCOPE+'index.html')?PAGE_KEY:p}
 
 self.addEventListener('install',e=>{
@@ -50,7 +51,7 @@ self.addEventListener('fetch',e=>{
   if(u.origin===location.origin){
     if(!req.url.startsWith(SCOPE))return; /* 同網域的選點頁不歸這裡管 */
     if(u.pathname.endsWith('/sw.js'))return;
-    if(/\.ctl$/i.test(u.pathname)||/\/ctl\/list\.txt$/.test(u.pathname)){e.respondWith(netFirst(req,u.origin+u.pathname));return}
+    if(/\.ctl$/i.test(u.pathname)||/\/ctl\/list\.txt$/.test(u.pathname)||u.pathname.endsWith('/manifest.json')){e.respondWith(netFirst(req,u.origin+u.pathname));return}
     if(ICONS.some(f=>u.pathname.endsWith('/'+f))){e.respondWith(cacheFirst(req,SHELL));return}
     return;
   }
