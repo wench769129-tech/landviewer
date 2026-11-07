@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
-/* 地籍瀏覽器（v1.8：宗地詳細頁改版、每段宗地線選色、註記 CSV、註記長按拖曳、CTL 匯入與分享、量距與面積；v1.7：上方「宗地」「點位」點選開關、點號八方向避讓；v1.6，獨立 repo 的 index.html）：全螢幕地圖、頂部狀態列與圖層切換、右側按鈕、底部面板 */
+/* 地籍瀏覽器（v1.9：新增註記面板精簡＋地號、已知點／補點／註記選色、定位橫幅（坐標＋所在地號＋羅盤）、找點、註記照片；v1.8：宗地詳細頁改版、每段宗地線選色、註記 CSV、註記長按拖曳、CTL 匯入與分享、量距與面積；v1.7：上方「宗地」「點位」點選開關、點號八方向避讓；v1.6，獨立 repo 的 index.html）：全螢幕地圖、頂部狀態列與圖層切換、右側按鈕、底部面板 */
 :root{
   --bg:#f1f3ef; --surface:#ffffff; --fg:#17211c; --muted:#5b6861; --line:#d3dad4;
   --accent:#2b4c7e; --accent-fg:#ffffff; --sel:#e8590c; --danger:#c22a2a;
@@ -89,7 +89,7 @@ body.has-sheet .fabs,body.has-sheet #addBtn{display:none}
 .lb.nt span{transform:translate(-3px,-100%);background:none;padding:0;box-shadow:none;display:flex;align-items:flex-end;gap:2px}
 .lb.nt svg{width:22px;height:26px;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
 .lb.nt b{font-size:12px;font-weight:700;color:#7a2e00;background:color-mix(in srgb,#fff 90%,transparent);border-radius:4px;padding:1px 5px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.3);white-space:nowrap}
-.lg-note{background:#e8590c;border-radius:2px 8px 8px 2px;width:10px;height:12px;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.lg-note{background:var(--lgc,#e8590c);border-radius:2px 8px 8px 2px;width:10px;height:12px;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
 textarea.in{min-height:90px;padding:10px 12px;resize:vertical;line-height:1.5}
 .ntxt{white-space:pre-wrap;font-size:16px;line-height:1.6;overflow-wrap:anywhere}
 
@@ -147,12 +147,43 @@ details.more table.kv{margin-top:2px}
 .lb.ma span{transform:translate(-50%,-50%);font-size:13px;font-weight:700;color:#fff;background:#2b4c7e;border-radius:6px;padding:4px 8px;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .lb.mv span{transform:translate(8px,6px);font-size:11px;font-weight:700;color:#7a2e00;text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 3px #fff}
 .msum{font-size:16px;line-height:1.6}.msum b{font-size:20px}
+/* v1.9：精簡面板（新增註記） */
+#sheet.cmp{gap:8px;padding-top:4px}
+#sheet.cmp .head h2{font-size:16px}#sheet.cmp .x{width:36px;height:36px}
+#sheet.cmp textarea.in{min-height:0;height:58px;padding:6px 10px;font-size:15px}
+#sheet.cmp .btn{min-height:42px;font-size:14px;min-width:0}
+.npar{font-size:13px;color:var(--muted);line-height:1.4;min-height:18px}.npar b{color:var(--fg)}
+.pres{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:10px;max-height:150px;overflow-y:auto}
+.pres li+li{border-top:1px solid var(--line)}
+.pres button{width:100%;text-align:left;border:0;background:none;min-height:40px;padding:4px 10px;font-size:14px}
+.pres small{color:var(--muted);margin-left:6px}
+/* v1.9：照片 */
+.phs{display:flex;gap:6px;flex-wrap:wrap}
+.ph{position:relative;width:72px;height:54px;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:var(--bg);padding:0;flex:none}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .rm{position:absolute;right:0;top:0;width:24px;height:24px;border:0;border-radius:0 0 0 6px;background:rgba(0,0,0,.6);color:#fff;font-size:15px;line-height:1;padding:0}
+#phView{position:fixed;z-index:1500;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
+#phView img{max-width:100%;max-height:100%;object-fit:contain}
+#phView button{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;font-size:24px}
+#phView .cnt{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);text-align:center;color:#fff;font-size:14px}
+/* v1.9：定位橫幅 */
+#locBar{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 10px 6px 12px;box-shadow:0 2px 10px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:3px;font-size:13px;line-height:1.35}
+#locBar .r{display:flex;align-items:center;gap:8px;min-height:30px}
+#locBar .r>span{flex:1;min-width:0}
+#locBar .mono{font-size:12.5px}
+#locBar .bs{flex:none;min-height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);font-size:13px;font-weight:600}
+#locBar .par{border:0;background:none;padding:0;text-align:left;font:inherit;color:var(--accent);font-weight:700}
+#locBar .fd2{border-top:1px solid var(--line);padding-top:4px}
+#locBar .fd2.near{background:color-mix(in srgb,var(--ok) 16%,transparent);border-radius:8px;border-top-color:transparent;padding:4px 6px;margin:0 -4px}
+#locBar .fd2 b{font-size:15px}
+.hd-ic svg{width:96px;height:96px;transform-origin:50% 50%;transition:transform .15s linear}
+.lb.fdl span{transform:translate(-50%,-50%);font-size:12px;font-weight:700;color:#fff;background:#2563eb;border-radius:5px;padding:2px 6px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
 details.bpl summary{cursor:pointer;min-height:40px;display:flex;align-items:center;font-weight:700;color:var(--accent)}
 details.bpl table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
 details.bpl th,details.bpl td{text-align:right;padding:4px 4px;border-top:1px solid var(--line);white-space:nowrap}
 details.bpl th:first-child,details.bpl td:first-child{text-align:left}
 details.bpl th{font-family:var(--font);color:var(--muted);font-weight:500}
-.lg-ct{background:var(--ctl);border-radius:2px;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.lg-ct{background:var(--lgc,var(--ctl));border-radius:2px;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
 .lg-cad{border-radius:0;border:2px solid var(--cad);height:10px}
 /* 地籍圖清單：每段一個資料夾 */
 .fd{border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
@@ -197,6 +228,7 @@ details.grp>summary{cursor:pointer;color:var(--accent);font-weight:700;min-heigh
     <button class="ib" type="button" id="tapPar" data-tap="par" aria-pressed="false" aria-label="點選宗地（開／關）"><svg viewBox="0 0 24 24"><path d="M4 7 12 3l8 5-2 11-12 2z" fill="currentColor" fill-opacity=".18"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg><b>宗地</b></button>
     <button class="ib" type="button" id="tapPt" data-tap="pt" aria-pressed="false" aria-label="點選點位（開／關）"><svg viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.3"/><circle cx="17" cy="5" r="2.3"/><circle cx="8" cy="18" r="2.3"/><circle cx="18" cy="16" r="2.3"/></svg><b>點位</b></button>
   </div>
+  <div id="locBar" hidden></div>
 </div>
 
 <div id="cross" hidden><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="9"/><path d="M22 2v10M22 32v10M2 22h10M32 22h10"/></svg></div>
@@ -234,7 +266,9 @@ details.grp>summary{cursor:pointer;color:var(--accent);font-weight:700;min-heigh
   </div>
 </div>
 <input type="file" id="fileIn" multiple hidden>
-<input type="file" id="noteIn" accept=".csv,text/csv,text/plain" hidden>
+<input type="file" id="noteIn" accept=".csv,.zip,text/csv,text/plain,application/zip" hidden>
+<input type="file" id="phIn" accept="image/*" multiple hidden>
+<div id="phView" hidden><img alt=""><button type="button" aria-label="關閉">×</button><div class="cnt"></div></div>
 <input type="file" id="ctlIn" multiple hidden>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -533,8 +567,8 @@ const csvCell=v=>{const t=String(v==null?'':v);return /[",\r\n]/.test(t)?'"'+t.r
 const p2=v=>String(v).padStart(2,'0');
 const fmtTime=t=>{const d=new Date(t);return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '+p2(d.getHours())+':'+p2(d.getMinutes())};
 function buildNotesCsv(notes){
-  const rows=[['點號','N','E','註記','建立時間']];
-  notes.forEach((n,i)=>{const q=toTM2(n.lat,n.lng);rows.push([i+1,q.N.toFixed(3),q.E.toFixed(3),n.t,fmtTime(n.at)])});
+  const rows=[['點號','N','E','地號','註記','建立時間','照片']];
+  notes.forEach((n,i)=>{const q=toTM2(n.lat,n.lng);rows.push([i+1,q.N.toFixed(3),q.E.toFixed(3),n.par?n.par.no:'',n.t,fmtTime(n.at),(n.ph||[]).map((x,k)=>(i+1)+'_'+(k+1)+'.jpg').join(';')])});
   return '﻿'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')+'\r\n';
 }
 function parseCsv(text){
@@ -553,14 +587,14 @@ function parseNotesCsv(text){
   const rows=parseCsv(text);if(!rows.length)throw new Error('檔案是空的');
   const h=rows[0].map(x=>x.trim().replace(/[\s（(].*$/,'').toUpperCase());
   const ix=re=>h.findIndex(x=>re.test(x));
-  const iN=ix(/^N$/),iE=ix(/^E$/),iT=ix(/^(註記|備註|說明|內容|文字)$/),iA=ix(/時間$/);
+  const iN=ix(/^N$/),iE=ix(/^E$/),iT=ix(/^(註記|備註|說明|內容|文字)$/),iA=ix(/時間$/),iP=ix(/^照片$/),iD=ix(/^地號$/);
   if(iN<0||iE<0||iT<0)throw new Error('第一列要有標題 N、E、註記（目前是：'+rows[0].join('、')+'）');
   const out=[];let bad=0;
   for(const r of rows.slice(1)){
     const N=parseFloat(r[iN]),E=parseFloat(r[iE]),t=String(r[iT]||'').trim();
     if(!isFinite(N)||!isFinite(E)||!t){bad++;continue}
     let at=0;if(iA>=0&&r[iA]){const w=Date.parse(String(r[iA]).trim().replace(/\//g,'-').replace(' ','T'));if(isFinite(w))at=w}
-    out.push({t,N,E,at});
+    out.push({t,N,E,at,par:iD>=0?String(r[iD]||'').trim():'',ph:iP>=0?String(r[iP]||'').split(/[;；|]/).map(x=>x.trim()).filter(Boolean):[]});
   }
   return{list:out,bad};
 }
@@ -578,7 +612,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 let toastT=0;
-function toast(t,ms){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),ms||2600)}
+function toast(t,ms){const el=$('#toast'),lb=$('#locBar');el.style.top=lb&&!lb.hidden?Math.round(lb.getBoundingClientRect().bottom+8)+'px':'';el.textContent=t;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),ms||2600)}
 const f3=v=>Number(v).toFixed(3);
 function copyText(t){
   if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(()=>toast('已複製：'+t),()=>toast(t,5000));
@@ -590,9 +624,10 @@ const navUrl=ll=>'https://www.google.com/maps/dir/?api=1&destination='+ll[0]+','
 const idb={
   _d:null,
   /* v2：加 notes（註記，只存本機）；v3：加 ctls（自己匯入或雲端分享的 CTL，key＝local:檔名／cloud:id） */
-  open(){if(this._d)return Promise.resolve(this._d);return new Promise((res,rej)=>{const r=indexedDB.open('cv_local',3);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('sets'))d.createObjectStore('sets',{keyPath:'id'});if(!d.objectStoreNames.contains('notes'))d.createObjectStore('notes',{keyPath:'id'});if(!d.objectStoreNames.contains('ctls'))d.createObjectStore('ctls',{keyPath:'k'})};r.onsuccess=()=>{this._d=r.result;res(r.result)};r.onerror=()=>rej(r.error)})},
+  open(){if(this._d)return Promise.resolve(this._d);return new Promise((res,rej)=>{const r=indexedDB.open('cv_local',4);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('sets'))d.createObjectStore('sets',{keyPath:'id'});if(!d.objectStoreNames.contains('notes'))d.createObjectStore('notes',{keyPath:'id'});if(!d.objectStoreNames.contains('ctls'))d.createObjectStore('ctls',{keyPath:'k'});if(!d.objectStoreNames.contains('photos'))d.createObjectStore('photos',{keyPath:'id'})};r.onsuccess=()=>{this._d=r.result;res(r.result)};r.onerror=()=>rej(r.error)})},
   async all(st='sets'){const d=await this.open();return new Promise((res,rej)=>{const q=d.transaction(st).objectStore(st).getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error)})},
   async put(v,st='sets'){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction(st,'readwrite');t.objectStore(st).put(v);t.oncomplete=()=>res();t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})},
+  async get(id,st){const d=await this.open();return new Promise((res,rej)=>{const q=d.transaction(st).objectStore(st).get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error)})},
   async del(id,st='sets'){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction(st,'readwrite');t.objectStore(st).delete(id);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})}
 };
 
@@ -831,10 +866,17 @@ const LY_DEF={known:1,sect:0,note:1};
 const ly={};for(const k in LY_DEF){const v=store.get('cv_ly_'+k);ly[k]=v==null?!!LY_DEF[k]:v==='1'}
 function setLy(k,v){ly[k]=v;store.set('cv_ly_'+k,v?'1':'0');applyLayers()}
 /* 每段各自的圖層（存本機 cv_sv）：on 整段、cad 宗地界線、lab 地號、nlab 新地號、bp 界址點、rp 參考點、ctl 補點 */
-const SV_DEF={on:1,cad:1,lab:1,nlab:0,bp:0,rp:0,ctl:0,col:0};
+const SV_DEF={on:1,cad:1,lab:1,nlab:0,bp:0,rp:0,ctl:0,col:0,ccol:0};
 /* v1.8：每段宗地線顏色（col＝索引，存在 cv_sv） */
 const CAD_COLS=[['#e8590c','橘'],['#e03131','紅'],['#1c7ed6','藍'],['#7048e8','紫'],['#2f9e44','綠'],['#f0b400','黃']];
 const setCol=s=>(CAD_COLS[sv(s).col]||CAD_COLS[0])[0];
+/* v1.9：已知點、註記（全域，存 cv_col_known／cv_col_note）、補點（每段，cv_sv 的 ccol）可選色；第一色是原本的預設 */
+const OTHER_COLS=[['#e03131','紅'],['#1c7ed6','藍'],['#7048e8','紫'],['#2f9e44','綠'],['#f0b400','黃']];
+const PAL={known:[['#c2255c','洋紅']].concat(OTHER_COLS),note:[['#e8590c','橘']].concat(OTHER_COLS),ctl:[['#a8641a','棕']].concat(OTHER_COLS)};
+const colIdx=k=>{const v=parseInt(store.get('cv_col_'+k)||'0',10);return v>=0&&v<6?v:0};
+const knownCol=()=>PAL.known[colIdx('known')][0],noteCol=()=>PAL.note[colIdx('note')][0];
+const ctlCol=s=>(PAL.ctl[sv(s).ccol]||PAL.ctl[0])[0];
+const swHtml=(pal,cur,attr)=>'<div class="cols"><span class="lbl">顏色</span>'+pal.map((c,i)=>'<button class="sw" type="button" '+attr+' data-ci="'+i+'" aria-label="'+c[1]+'色" aria-pressed="'+(cur===i)+'" style="background:'+c[0]+'"></button>').join('')+'</div>';
 let svAll={};try{svAll=JSON.parse(store.get('cv_sv')||'{}')||{}}catch(e){svAll={}}
 const svOpen=new Set();
 function sv(s){let o=svAll[s.id];if(!o){o=svAll[s.id]=Object.assign({},SV_DEF)}for(const k in SV_DEF)if(o[k]==null)o[k]=SV_DEF[k];return o}
@@ -872,12 +914,12 @@ function drawSets(){
   for(const s of sets){
     const col=setCol(s);
     if(svOn(s,'cad'))for(const p of s.parcels)if(p.r.length)L.polygon(p.r,{renderer:cadR,pane:'cadPane',color:col,weight:1.2,fill:false,interactive:false}).addTo(cadLayer);
-    if(svOn(s,'ctl'))for(const c of s.ctl)L.circleMarker(c.ll,{renderer:ptR,pane:'ptPane',radius:5,color:'#fff',weight:2,fillColor:'#a8641a',fillOpacity:1,interactive:false}).addTo(ctlLayer);
+    if(svOn(s,'ctl')){const cc=ctlCol(s);for(const c of s.ctl)L.circleMarker(c.ll,{renderer:ptR,pane:'ptPane',radius:5,color:'#fff',weight:2,fillColor:cc,fillOpacity:1,interactive:false}).addTo(ctlLayer)}
   }
 }
 function drawKnown(){
   knownLayer.clearLayers();
-  const col=getComputedStyle(document.documentElement).getPropertyValue('--known').trim()||'#c2255c';
+  const col=knownCol();
   for(const p of known)new TriMark(p.ll,{renderer:ptR,pane:'ptPane',radius:7,fillColor:col,interactive:false}).addTo(knownLayer);
 }
 function applyLayers(){
@@ -906,14 +948,15 @@ function updateLabels(){
   const z=map.getZoom(),b=map.getBounds().pad(.1),S=b.getSouth(),N=b.getNorth(),W=b.getWest(),E=b.getEast();
   const inV=ll=>ll[0]>=S&&ll[0]<=N&&ll[1]>=W&&ll[1]<=E;
   let n=0;
-  const addH=(ll,cls,h,tf)=>{if(n>=LB_MAX)return;n++;L.marker(ll,{pane:'lbPane',interactive:false,keyboard:false,icon:L.divIcon({className:'lb '+cls,iconSize:[0,0],html:'<span'+(tf?' style="transform:'+tf+'"':'')+'>'+h+'</span>'})}).addTo(lbLayer)};
+  const addH=(ll,cls,h,tf,co)=>{if(n>=LB_MAX)return;n++;L.marker(ll,{pane:'lbPane',interactive:false,keyboard:false,icon:L.divIcon({className:'lb '+cls,iconSize:[0,0],html:'<span'+(tf||co?' style="'+(tf?'transform:'+tf+';':'')+(co?'color:'+co:'')+'"':'')+'>'+h+'</span>'})}).addTo(lbLayer)};
+  const kc=knownCol();
   /* v1.7：點號八方向避讓（同選點頁）。依序試 右、右上、右下、左、左上、左下、上、下；
      會蓋到其他點或點號就換方向，八個都不行就只顯示點、不顯示點號（放大後有空間會出現）。
      優先序：已知點 > CTL > 參考點 > 界址點 */
   const bpOn=bpZ(),obs=[],lbs=[];
   const dot=(ll,r)=>{const q=map.latLngToContainerPoint(ll);obs.push([q.x-r,q.y-r,q.x+r,q.y+r]);return q};
-  if(ly.known)for(const p of known)if(inV(p.ll)){const q=dot(p.ll,8);if(z>=LB_KNOWN_Z)lbs.push({ll:p.ll,q,cls:'kn',t:p.name,rk:0,r:8})}
-  for(const s of sets)if(svOn(s,'ctl'))for(const c of s.ctl)if(inV(c.ll)){const q=dot(c.ll,7);if(z>=LB_CTL_Z)lbs.push({ll:c.ll,q,cls:'ct',t:c.n,rk:1,r:7})}
+  if(ly.known)for(const p of known)if(inV(p.ll)){const q=dot(p.ll,8);if(z>=LB_KNOWN_Z)lbs.push({ll:p.ll,q,cls:'kn',t:p.name,rk:0,r:8,co:kc})}
+  for(const s of sets)if(svOn(s,'ctl')){const cc=ctlCol(s);for(const c of s.ctl)if(inV(c.ll)){const q=dot(c.ll,7);if(z>=LB_CTL_Z)lbs.push({ll:c.ll,q,cls:'ct',t:c.n,rk:1,r:7,co:cc})}}
   if(bpOn){let k=0;inViewBp((s,p)=>{if(k++>4000)return;const q=dot(p.ll,5);if(z>=BP_LB_Z)lbs.push({ll:p.ll,q,cls:'rp',t:p.n,rk:2,r:5})},'rp');
     k=0;inViewBp((s,p)=>{if(k++>4000)return;const q=dot(p.ll,5);if(z>=BP_LB_Z)lbs.push({ll:p.ll,q,cls:'bp',t:p.n,rk:3,r:5})})}
   lbs.sort((a,b)=>a.rk-b.rk);
@@ -924,7 +967,7 @@ function updateLabels(){
     const c=[[g,-h/2],[d,-h-d],[d,d],[-g-w,-h/2],[-d-w,-h-d],[-d-w,d],[-w/2,-h-g],[-w/2,g]];
     let pk=null;for(const[ox,oy]of c){const b=[v.q.x+ox,v.q.y+oy,v.q.x+ox+w,v.q.y+oy+h];if(!hit(b)){pk=[ox,oy,b];break}}
     if(!pk)continue;
-    obs.push(pk[2]);addH(v.ll,v.cls,esc(v.t),'translate('+Math.round(pk[0])+'px,'+Math.round(pk[1])+'px)');
+    obs.push(pk[2]);addH(v.ll,v.cls,esc(v.t),'translate('+Math.round(pk[0])+'px,'+Math.round(pk[1])+'px)',v.co);
   }
   if(z>=LB_PAR_Z)for(const s of sets){
     const lab=svOn(s,'lab'),nlab=svOn(s,'nlab');if(!lab&&!nlab)continue;
@@ -1008,12 +1051,15 @@ $('#fitBtn').addEventListener('click',fitAll);
 
 /* ---------- 底部面板 ---------- */
 let sheetKind='',mode='';
-function openSheet(kind,html){
-  sheetKind=kind;const sh=$('#sheet');sh.innerHTML='<div class="grab"></div>'+html;sh.hidden=false;sh.scrollTop=0;
+let sheetUrls=[];
+function revokeUrls(){sheetUrls.forEach(u=>{try{URL.revokeObjectURL(u)}catch(e){}});sheetUrls=[]}
+function openSheet(kind,html,cmp){
+  revokeUrls();
+  sheetKind=kind;const sh=$('#sheet');sh.classList.toggle('cmp',!!cmp);sh.innerHTML='<div class="grab"></div>'+html;sh.hidden=false;sh.scrollTop=0;
   document.body.classList.add('has-sheet');
   sh.querySelectorAll('[data-x]').forEach(b=>b.addEventListener('click',closeSheet));
 }
-function closeSheet(){if(nMove){const m=nMove;nMove=null;undoNoteMove(m)}if(mode==='msr')msrEnd(true);if(mode){mode='';$('#cross').hidden=true}sheetKind='';$('#sheet').hidden=true;$('#sheet').innerHTML='';document.body.classList.remove('has-sheet');selLayer.clearLayers()}
+function closeSheet(){if(nMove){const m=nMove;nMove=null;undoNoteMove(m)}if(mode==='msr')msrEnd(true);if(mode){mode='';$('#cross').hidden=true}sheetKind='';$('#sheet').hidden=true;$('#sheet').innerHTML='';$('#sheet').classList.remove('cmp');revokeUrls();pendPh=[];document.body.classList.remove('has-sheet');selLayer.clearLayers()}
 const headHtml=(t,sub)=>'<div class="head"><h2>'+t+(sub?'<small>'+sub+'</small>':'')+'</h2><button class="x" data-x aria-label="關閉">×</button></div>';
 /* 往下滑關閉 */
 (()=>{let y0=null;const sh=$('#sheet');
@@ -1059,7 +1105,8 @@ function showParcel(s,p){
   openSheet('parcel',headHtml('地號 '+esc(od||no))+kv(main)+
     '<details class="more"><summary>更多 ▸</summary>'+kv(more)+'</details>'+
     bpListHtml(s,p)+
-    (p.c?'<div class="btns"><a class="btn" target="_blank" rel="noopener" href="'+navUrl(p.c)+'">導航</a></div>':''));
+    (p.c?'<div class="btns"><button class="btn" data-find>找點</button><a class="btn" target="_blank" rel="noopener" href="'+navUrl(p.c)+'">導航</a></div>':''));
+  if(p.c){const q=p.cy&&p.cx?{N:p.cy,E:p.cx}:toTM2(p.c[0],p.c[1]);bindFind({n:'地號 '+(od||no),N:q.N,E:q.E,ll:p.c})}
   const cb=$('#cpBp');if(cb)cb.addEventListener('click',()=>{const m=bpIndex(s);copyText(p.bn.map(n=>m.get(n)).filter(Boolean).map(b=>b.n+'\t'+f3(b.N)+'\t'+f3(b.E)).join('\n'))});
 }
 function bpListHtml(s,p){
@@ -1092,8 +1139,8 @@ function showBp(s,b){
     '<table class="kv"><tr><th>N</th><td class="mono">'+f3(b.N)+'</td></tr><tr><th>E</th><td class="mono">'+f3(b.E)+'</td></tr>'+
     '<tr><th>樁類</th><td>'+esc(MATTER[b.mt]||'—')+'</td></tr><tr><th>坐標來源</th><td>'+esc(SOURCE[b.src]||b.src||'—')+'</td></tr></table>'+
     '<p class="label">所屬地號（'+pars.length+'）</p><div class="btns">'+pars.map((p,i)=>'<button class="btn sm" data-pp="'+i+'">'+esc(p.nm?parNo(p.nm,p.nc):'舊 '+parNo(p.om,p.oc))+'</button>').join('')+'</div>'+samePosHtml(s,b)+
-    '<div class="btns"><button class="btn" id="cpNE">複製 N,E</button><a class="btn" target="_blank" rel="noopener" href="'+navUrl(b.ll)+'">導航</a></div>');
-  $('#cpNE').addEventListener('click',()=>copyText(f3(b.N)+','+f3(b.E)));
+    '<div class="btns"><button class="btn" id="cpNE">複製 N,E</button><button class="btn" data-find>找點</button><a class="btn" target="_blank" rel="noopener" href="'+navUrl(b.ll)+'">導航</a></div>');
+  $('#cpNE').addEventListener('click',()=>copyText(f3(b.N)+','+f3(b.E)));bindFind({n:b.n,N:b.N,E:b.E,ll:b.ll});
   $('#sheet').querySelectorAll('[data-pp]').forEach(x=>x.addEventListener('click',()=>showParcel(s,pars[+x.dataset.pp])));bindSamePos(s,b);
 }
 function showRp(s,r){
@@ -1101,8 +1148,8 @@ function showRp(s,r){
   openSheet('rp',headHtml('參考點 '+esc(r.n),esc(s.label))+
     '<table class="kv"><tr><th>N</th><td class="mono">'+f3(r.N)+'</td></tr><tr><th>E</th><td class="mono">'+f3(r.E)+'</td></tr>'+
     '<tr><th>坐標來源</th><td>'+esc(SOURCE[r.src]||r.src||'—')+'</td></tr></table>'+samePosHtml(s,r)+
-    '<div class="btns"><button class="btn" id="cpNE">複製 N,E</button><a class="btn" target="_blank" rel="noopener" href="'+navUrl(r.ll)+'">導航</a></div>');
-  $('#cpNE').addEventListener('click',()=>copyText(f3(r.N)+','+f3(r.E)));bindSamePos(s,r);
+    '<div class="btns"><button class="btn" id="cpNE">複製 N,E</button><button class="btn" data-find>找點</button><a class="btn" target="_blank" rel="noopener" href="'+navUrl(r.ll)+'">導航</a></div>');
+  $('#cpNE').addEventListener('click',()=>copyText(f3(r.N)+','+f3(r.E)));bindSamePos(s,r);bindFind({n:r.n,N:r.N,E:r.E,ll:r.ll});
 }
 function showKnown(p){
   selPoint(p.ll);
@@ -1111,17 +1158,28 @@ function showKnown(p){
     '<table class="kv"><tr><th>N</th><td class="mono">'+f3(p.N)+'</td></tr><tr><th>E</th><td class="mono">'+f3(p.E)+'</td></tr>'+
     (p.H?'<tr><th>H</th><td class="mono">'+f3(p.H)+'</td></tr>':'')+
     '<tr><th>成果</th><td>'+esc(p.file)+'</td></tr></table>'+oth+
-    '<div class="btns"><button class="btn" id="cpNE">複製 N,E</button><a class="btn" target="_blank" rel="noopener" href="'+navUrl(p.ll)+'">導航</a></div>');
-  $('#cpNE').addEventListener('click',()=>copyText(f3(p.N)+','+f3(p.E)));
+    '<div class="btns"><button class="btn" id="cpNE">複製 N,E</button><button class="btn" data-find>找點</button><a class="btn" target="_blank" rel="noopener" href="'+navUrl(p.ll)+'">導航</a></div>');
+  $('#cpNE').addEventListener('click',()=>copyText(f3(p.N)+','+f3(p.E)));bindFind({n:p.name,N:p.N,E:p.E,ll:p.ll});
 }
 function showCtl(s,c){
   selPoint(c.ll);
   openSheet('ctl',headHtml(esc(c.n),'補點（'+esc(s.label)+'）')+
     '<table class="kv"><tr><th>N</th><td class="mono">'+f3(c.N)+'</td></tr><tr><th>E</th><td class="mono">'+f3(c.E)+'</td></tr><tr><th>等級</th><td>'+esc(LEVEL[c.lv]||c.lv||'—')+'</td></tr></table>'+
-    '<div class="btns"><button class="btn" id="cpNE">複製 N,E</button><a class="btn" target="_blank" rel="noopener" href="'+navUrl(c.ll)+'">導航</a></div>');
-  $('#cpNE').addEventListener('click',()=>copyText(f3(c.N)+','+f3(c.E)));
+    '<div class="btns"><button class="btn" id="cpNE">複製 N,E</button><button class="btn" data-find>找點</button><a class="btn" target="_blank" rel="noopener" href="'+navUrl(c.ll)+'">導航</a></div>');
+  $('#cpNE').addEventListener('click',()=>copyText(f3(c.N)+','+f3(c.E)));bindFind({n:c.n,N:c.N,E:c.E,ll:c.ll});
 }
 
+/* v1.9：某位置落在哪一筆宗地（地中地取面積最小）；all＝不看圖層開關 */
+function parcelAt(lat,lng,all){
+  let hit=null;
+  for(const s of sets){
+    if(!all&&!svOn(s,'cad')&&!svOn(s,'lab')&&!svOn(s,'nlab'))continue;
+    const b=s.bb;if(lat<b[0]||lat>b[2]||lng<b[1]||lng>b[3])continue;
+    for(const p of s.parcels){const q=p.bb;if(!p.r.length||lat<q[0]||lat>q[2]||lng<q[1]||lng>q[3])continue;if(inRings(lat,lng,p.r)&&(!hit||p.am<hit.p.am))hit={s,p}}
+  }
+  return hit;
+}
+const parLabel=h=>h?(oldNo(h.p)||parNo(h.p.nm,h.p.nc)||'（未編定）'):'';
 /* ---------- 輕點判定（距離判定，不依賴 Leaflet click） ---------- */
 const TAP_PX=24;
 /* v1.7：點選開關。開 App 時都關（不記憶）；關著時地籍圖／點位只當背景，點不到。註記與搜尋不受影響 */
@@ -1132,6 +1190,7 @@ document.querySelectorAll('.ib[data-tap]').forEach(b=>b.addEventListener('click'
 }));
 function handleTap(cp){
   if(mode==='msr'){msrTap(cp);return}
+  if(mode==='nadd'){const ll=map.containerPointToLatLng(cp),h=parcelAt(ll.lat,ll.lng,true);if(h&&h.p.c){viewAtCross(h.p.c[0],h.p.c[1],map.getZoom());toast('已對準 地號 '+parLabel(h)+' 的注記點',1800)}return}
   if(mode)return;
   const ll=map.containerPointToLatLng(cp);
   let best=null,bd=TAP_PX;
@@ -1144,12 +1203,7 @@ function handleTap(cp){
   if(ly.note)for(const n of notes){const q=map.latLngToContainerPoint(n.ll);test(map.containerPointToLatLng(L.point(q.x+8,q.y-14)),()=>showNote(n))}
   if(best){best();return}
   /* 地中地：外圍宗地也包住內含宗地，取面積最小的那筆 */
-  let hit=null;
-  if(tapOn.par)for(const s of sets){
-    if(!svOn(s,'cad')&&!svOn(s,'lab')&&!svOn(s,'nlab'))continue;
-    const b=s.bb;if(ll.lat<b[0]||ll.lat>b[2]||ll.lng<b[1]||ll.lng>b[3])continue;
-    for(const p of s.parcels){const q=p.bb;if(!p.r.length||ll.lat<q[0]||ll.lat>q[2]||ll.lng<q[1]||ll.lng>q[3])continue;if(inRings(ll.lat,ll.lng,p.r)&&(!hit||p.am<hit.p.am))hit={s,p}}
-  }
+  const hit=tapOn.par?parcelAt(ll.lat,ll.lng):null;
   if(hit){showParcel(hit.s,hit.p);return}
   if(sheetKind)closeSheet();
 }
@@ -1237,16 +1291,19 @@ function openLayers(msg,cls){
         '<div class="cols"><span class="lbl">線色</span>'+CAD_COLS.map((c,i)=>'<button class="sw" type="button" data-col="'+i+'" data-cs="'+esc(s.id)+'" aria-label="'+c[1]+'色" aria-pressed="'+(sv(s).col===i)+'" style="background:'+c[0]+'"></button>').join('')+'</div>'+sub(s,'lab','地號','','舊地號，zoom 18 以上')+sub(s,'nlab','新地號','','舊地號下一行，例 N101')+
         sub(s,'bp','界址點','lg-bp',s.bpts?'zoom 19 以上，20 顯示點號':'舊版匯入，請重新匯入',!s.bpts)+
         sub(s,'rp','參考點','lg-rp',s.rpts?'zoom 19 以上，20 顯示點號':'舊版匯入，請重新匯入',!s.rpts)+
-        sub(s,'ctl','補點（D20）','lg-ct',s.ctl.length?'':(s.fmt==='fz'?'複丈檔沒有補點':'這一段沒有 D20'),!s.ctl.length)+
+        sub(s,'ctl','補點（D20）','lg-ct" style="--lgc:'+ctlCol(s),s.ctl.length?'':(s.fmt==='fz'?'複丈檔沒有補點':'這一段沒有 D20'),!s.ctl.length)+
+        (s.ctl.length?swHtml(PAL.ctl,sv(s).ccol,'data-cc="'+esc(s.id)+'"'):'')+
         '<div class="btns">'+setBtns(s)+'</div></div>':'')+'</div>'};
   const setsH=sets.length?sets.map(fold).join(''):'<div class="empty" style="border:1px solid var(--line);border-radius:12px">還沒有匯入地籍圖</div>';
   openSheet('layers',headHtml('圖層與資料')+
     '<div><p class="label">圖層</p>'+
-    chk('known','已知點','lg-kn')+chk('note','註記','lg-note')+chk('sect','段籍圖（國土測繪中心）')+'</div>'+
+    chk('known','已知點','lg-kn" style="background:none;clip-path:polygon(50% 0,100% 100%,0 100%);background-color:'+knownCol())+swHtml(PAL.known,colIdx('known'),'data-gk="known"')+
+    chk('note','註記','lg-note" style="--lgc:'+noteCol())+swHtml(PAL.note,colIdx('note'),'data-gk="note"')+
+    chk('sect','段籍圖（國土測繪中心）')+'</div>'+
     '<div><p class="label">已知點(CTL)</p>'+files+'</div>'+
     '<div><p class="label">註記（只存在這台裝置）</p>'+(notes.length?'<ul class="list">'+notes.slice().sort((a,b)=>b.up-a.up).map(n=>'<li><button class="go" data-n="'+esc(n.id)+'"><b>'+esc(noteHead(n.t,20))+'</b><small>'+new Date(n.up).toLocaleString('zh-TW',{dateStyle:'short',timeStyle:'short'})+'</small></button></li>').join('')+'</ul>':'<div class="empty" style="border:1px solid var(--line);border-radius:12px">還沒有註記。按下方「＋ 新增註記」。</div>')+
-      '<div class="btns" style="margin-top:8px"><button class="btn sm" id="nExp"'+(notes.length?'':' disabled')+'>註記匯出（.csv）</button><button class="btn sm" id="nImp">註記匯入（.csv）</button></div>'+
-      '<p class="hint" style="margin-top:6px">CSV 欄位：點號、N、E、註記、建立時間（TWD97）。匯入時第一列要有 N、E、註記；長按地圖上的旗子 0.8 秒可拖曳調整位置。</p></div>'+
+      '<div class="btns" style="margin-top:8px"><button class="btn sm" id="nExp"'+(notes.length?'':' disabled')+'>註記匯出（.csv）</button><button class="btn sm" id="nZip"'+(notes.length?'':' disabled')+'>註記匯出（含照片 .zip）</button><button class="btn sm" id="nImp">註記匯入（.csv／.zip）</button></div>'+
+      '<p class="hint" style="margin-top:6px">'+phSummary()+'CSV 欄位：點號、N、E、地號、註記、建立時間、照片（TWD97）。匯入時第一列要有 N、E、註記；zip 會連照片一起還原。長按地圖上的旗子 0.8 秒可拖曳調整位置。</p></div>'+
     '<div><p class="label">地籍圖</p>'+setsH+'<p class="hint" style="margin-top:6px">'+
       (cloud.st==='ok'?(adm?'你是管理者：「分享」會上傳到雲端，有瀏覽密碼的同事都看得到；刪除全組的段，大家都會看不到。':'「全組」是管理者分享的段，有更新會自動下載。自己匯入的只存在這台裝置。')
         :cloud.st==='bad'?'瀏覽密碼不對，請按右上角重新輸入。':cloud.st==='offline'?'目前離線，先顯示這台裝置上的資料。':'按右上角「輸入密碼」，就能看到全組分享的地籍圖。自己匯入的只存在這台裝置，不會上傳。')+'</p></div>'+
@@ -1289,6 +1346,9 @@ function openLayers(msg,cls){
   $('#nExp').addEventListener('click',exportNotes);
   $('#nImp').addEventListener('click',()=>{$('#noteIn').value='';$('#noteIn').click()});
   sh.querySelectorAll('[data-col]').forEach(b=>b.addEventListener('click',()=>{const s=sets.find(x=>x.id===b.dataset.cs);if(!s)return;sv(s).col=+b.dataset.col;store.set('cv_sv',JSON.stringify(svAll));drawSets();openLayersKeep()}));
+  sh.querySelectorAll('[data-cc]').forEach(b=>b.addEventListener('click',()=>{const s=sets.find(x=>x.id===b.dataset.cc);if(!s)return;sv(s).ccol=+b.dataset.ci;store.set('cv_sv',JSON.stringify(svAll));drawSets();updateLabels();openLayersKeep()}));
+  sh.querySelectorAll('[data-gk]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.gk;store.set('cv_col_'+k,b.dataset.ci);if(k==='known')drawKnown();else drawNotes();updateLabels();openLayersKeep()}));
+  $('#nZip').addEventListener('click',exportNotesZip);
   $('#ctlImp').addEventListener('click',()=>{$('#ctlIn').value='';$('#ctlIn').click()});
   sh.querySelectorAll('[data-csh]').forEach(b=>b.addEventListener('click',async()=>{
     const f=ctlFiles[+b.dataset.csh];if(!f||!f.rec)return;
@@ -1381,10 +1441,10 @@ $('#fileIn').addEventListener('change',async e=>{
 
 /* ---------- 註記（只存在這台裝置） ---------- */
 const NOTE_LB_Z=17;
-const FLAG='<svg viewBox="0 0 22 26"><path d="M3 1v24" stroke="#5c2a00" stroke-width="2.4" stroke-linecap="round"/><path d="M4 2h14l-3.5 5L18 12H4z" fill="#e8590c" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+const FLAG=c=>'<svg viewBox="0 0 22 26"><path d="M3 1v24" stroke="#5c2a00" stroke-width="2.4" stroke-linecap="round"/><path d="M4 2h14l-3.5 5L18 12H4z" fill="'+(c||noteCol())+'" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>';
 function drawNotes(){
-  noteLayer.clearLayers();const z=map.getZoom();
-  for(const n of notes)L.marker(n.ll,{pane:'lbPane',interactive:false,keyboard:false,icon:L.divIcon({className:'lb nt',iconSize:[0,0],html:'<span>'+FLAG+(z>=NOTE_LB_Z?'<b>'+esc(noteHead(n.t))+'</b>':'')+'</span>'})}).addTo(noteLayer);
+  noteLayer.clearLayers();const z=map.getZoom(),fl=FLAG();
+  for(const n of notes)L.marker(n.ll,{pane:'lbPane',interactive:false,keyboard:false,icon:L.divIcon({className:'lb nt',iconSize:[0,0],html:'<span>'+fl+(z>=NOTE_LB_Z?'<b>'+esc(noteHead(n.t))+'</b>':'')+'</span>'})}).addTo(noteLayer);
 }
 map.on('zoomend',drawNotes);
 function crossLL(){
@@ -1397,16 +1457,87 @@ function viewAtCross(lat,lng,z){
   map.panBy(L.point(-(cr.left+cr.width/2-r.left-sz.x/2),-(cr.top+cr.height/2-r.top-sz.y/2)),{animate:false});
 }
 const newId=()=>'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-async function saveNote(n){try{await idb.put({id:n.id,t:n.t,lat:n.lat,lng:n.lng,at:n.at,up:n.up},'notes');return true}catch(e){toast('無法儲存到這台裝置');return false}}
+async function saveNote(n){try{await idb.put({id:n.id,t:n.t,lat:n.lat,lng:n.lng,at:n.at,up:n.up,par:n.par||null,ph:n.ph||[]},'notes');return true}catch(e){toast('無法儲存到這台裝置');return false}}
+const parOf=(lat,lng)=>{const h=parcelAt(lat,lng,true);return h?{no:parLabel(h),sl:h.s.label}:null};
+/* ---- v1.9 照片：只收橫拍；長邊 1280、JPEG 0.8；存 IndexedDB photos（id、nid、blob、w、h、at），註記只記 [{id,sz}] ---- */
+const PH_MAX=5;let pendPh=[],phTarget=null;
+async function procPhoto(file){
+  let bm,w,h;
+  try{bm=await createImageBitmap(file,{imageOrientation:'from-image'});w=bm.width;h=bm.height}
+  catch(e){bm=await new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error('無法讀取圖片'));im.src=u});w=bm.naturalWidth;h=bm.naturalHeight}
+  if(!(w>h))return{portrait:true};
+  const k=Math.min(1,1280/w),cw=Math.round(w*k),ch=Math.round(h*k);
+  const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;cv.getContext('2d').drawImage(bm,0,0,cw,ch);
+  const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',.8));if(!blob)throw new Error('壓縮失敗');
+  return{blob,w:cw,h:ch,sz:blob.size};
+}
+const phId=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const phUrl=b=>{const u=URL.createObjectURL(b);sheetUrls.push(u);return u};
+function phSummary(){const ps=notes.flatMap(n=>n.ph||[]);if(!ps.length)return '';return '照片 '+ps.length+' 張・約 '+(ps.reduce((a,x)=>a+(x.sz||0),0)/1048576).toFixed(1)+' MB。'}
+function openViewer(urls,i){
+  const v=$('#phView'),img=v.querySelector('img'),cnt=v.querySelector('.cnt');let k=i||0;
+  const show=()=>{img.src=urls[k];cnt.textContent=urls.length>1?(k+1)+' / '+urls.length+'（點照片看下一張）':''};
+  show();v.hidden=false;
+  img.onclick=()=>{if(urls.length>1){k=(k+1)%urls.length;show()}};
+  v.querySelector('button').onclick=()=>{v.hidden=true;img.removeAttribute('src')};
+}
+$('#phIn').addEventListener('change',async e=>{
+  const fl=[...e.target.files];if(!fl.length)return;
+  const tg=phTarget;let rej=0,full=0,bad=0;const got=[];
+  $('#busy').hidden=false;
+  for(const f of fl){
+    const have=tg==='add'?pendPh.length:((tg&&tg.ph)||[]).length;
+    if(have+got.length>=PH_MAX){full++;continue}
+    try{const r=await procPhoto(f);if(r.portrait){rej++;continue}got.push(Object.assign(r,{id:phId()}))}catch(err){bad++}
+  }
+  $('#busy').hidden=true;
+  if(tg==='add'){pendPh=pendPh.concat(got);renderPend()}
+  else if(tg&&got.length){
+    try{for(const g of got)await idb.put({id:g.id,nid:tg.id,blob:g.blob,w:g.w,h:g.h,at:Date.now()},'photos')}catch(err){toast('無法儲存照片到這台裝置');return}
+    tg.ph=(tg.ph||[]).concat(got.map(g=>({id:g.id,sz:g.sz})));tg.up=Date.now();await saveNote(tg);showNote(tg);
+  }
+  const m=[];if(got.length)m.push('已加入 '+got.length+' 張');if(rej)m.push(rej+' 張是直式，只接受橫拍照片，請把手機轉橫再拍一次');if(full)m.push('每則最多 '+PH_MAX+' 張，'+full+' 張未加入');if(bad)m.push(bad+' 張無法讀取');
+  if(m.length)toast(m.join('；'),rej?5000:2600);
+});
+function pickPhotos(tg){phTarget=tg;$('#phIn').value='';$('#phIn').click()}
+function renderPend(){
+  const el=$('#nPhs');if(!el)return;
+  el.innerHTML=pendPh.map((p,i)=>'<div class="ph"><img src="'+phUrl(p.blob)+'" alt=""><button class="rm" data-rp="'+i+'" aria-label="移除">×</button></div>').join('');
+  el.querySelectorAll('[data-rp]').forEach(b=>b.addEventListener('click',()=>{pendPh.splice(+b.dataset.rp,1);renderPend()}));
+  const pb=$('#nPh');if(pb)pb.disabled=pendPh.length>=PH_MAX;
+}
+/* 新增註記（v1.9 精簡面板＋十字所在地號＋選地號＋照片） */
+let nparRaf=0;
+function updNPar(){
+  const el=$('#nPar');if(!el||mode!=='nadd')return;
+  if(!sets.length){el.textContent='';return}
+  const c=crossLL(),h=parcelAt(c.lat,c.lng,true);
+  el.innerHTML=h?'十字在 地號 <b>'+esc(parLabel(h))+'</b>（'+esc(h.s.label)+'）':'十字不在已匯入的宗地內';
+}
+map.on('move',()=>{if(mode==='nadd'&&!nparRaf)nparRaf=requestAnimationFrame(()=>{nparRaf=0;updNPar()})});
 function startAdd(){
-  closeSheet();mode='nadd';$('#cross').hidden=false;
+  closeSheet();
   if(!ly.note)setLy('note',true);
-  openSheet('nadd',headHtml('新增註記')+'<p class="hint">只存在這台裝置</p>'+
-    '<textarea class="in" id="nTxt" maxlength="500" placeholder="註記文字，例如：樁位被移動、北側圍牆待指界"></textarea>'+
-    '<p class="hint">移動地圖，讓橘色十字對準要註記的位置。</p>'+
-    '<div class="btns"><button class="btn" id="nGps">GPS 定位</button><button class="btn pri" id="nSave">儲存</button></div>');
-  mode='nadd';$('#cross').hidden=false;
+  pendPh=[];
+  openSheet('nadd',headHtml('新增註記')+
+    '<div class="npar" id="nPar"></div>'+
+    '<div id="pSel" hidden><input class="in" id="pQ" maxlength="30" autocomplete="off" placeholder="輸入地號，例：827、827-3、334 827"><ul class="pres" id="pRes"></ul></div>'+
+    '<textarea class="in" id="nTxt" maxlength="500" placeholder="註記文字（移動地圖讓十字對準位置；也可以直接點宗地）"></textarea>'+
+    '<div class="phs" id="nPhs"></div>'+
+    '<div class="btns"><button class="btn" id="nPS">選地號</button><button class="btn" id="nGps">GPS</button><button class="btn" id="nPh">選照片</button><button class="btn pri" id="nSave">儲存</button></div>',true);
+  mode='nadd';$('#cross').hidden=false;updNPar();
+  $('#nPS').addEventListener('click',()=>{const b=$('#pSel');b.hidden=!b.hidden;if(!b.hidden)setTimeout(()=>$('#pQ').focus(),50)});
+  let qT=0;
+  $('#pQ').addEventListener('input',()=>{clearTimeout(qT);qT=setTimeout(()=>{
+    const q=$('#pQ').value.trim(),ul=$('#pRes');if(!q){ul.innerHTML='';return}
+    const res=searchAll(q,sets,[],[],30).filter(r=>r.k==='p'&&r.p.c).slice(0,12);
+    if(!res.length){ul.innerHTML='<li><span class="empty" style="display:block;padding:8px 10px">找不到這個地號</span></li>';return}
+    ul.innerHTML=res.map((r,i)=>'<li><button type="button" data-pi="'+i+'"><b class="mono">'+esc(parLabel({p:r.p}))+'</b><small>'+(r.p.nm?'新 '+esc(parNo(r.p.nm,r.p.nc))+'・':'')+esc(r.set.label)+'</small></button></li>').join('');
+    ul.querySelectorAll('[data-pi]').forEach(b=>b.addEventListener('click',()=>{const r=res[+b.dataset.pi];if(!svOn(r.set,'cad'))showSv(r.set,'cad');viewAtCross(r.p.c[0],r.p.c[1],Math.max(map.getZoom(),19));$('#pSel').hidden=true;$('#pQ').value='';ul.innerHTML='';updNPar()}));
+  },200)});
+  $('#nPh').addEventListener('click',()=>pickPhotos('add'));
   $('#nGps').addEventListener('click',()=>{
+    if(lastFix){viewAtCross(lastFix.ll[0],lastFix.ll[1],Math.max(map.getZoom(),19));toast('已移到目前位置，精度約 ±'+Math.round(lastFix.acc)+' m');return}
     if(!window.isSecureContext||!navigator.geolocation){gpsFail('unsupported');return}
     toast('定位中…');
     navigator.geolocation.getCurrentPosition(p=>{viewAtCross(p.coords.latitude,p.coords.longitude,Math.max(map.getZoom(),19));toast('已移到目前位置，精度約 ±'+Math.round(p.coords.accuracy)+' m')},
@@ -1414,9 +1545,10 @@ function startAdd(){
   });
   $('#nSave').addEventListener('click',async()=>{
     const t=$('#nTxt').value.trim();if(!t){toast('請輸入註記文字');$('#nTxt').focus();return}
-    const c=crossLL(),now=Date.now(),n={id:newId(),t,lat:r7(c.lat),lng:r7(c.lng),at:now,up:now};n.ll=[n.lat,n.lng];
+    const c=crossLL(),now=Date.now(),n={id:newId(),t,lat:r7(c.lat),lng:r7(c.lng),at:now,up:now,par:parOf(c.lat,c.lng),ph:[]};n.ll=[n.lat,n.lng];
+    try{for(const g of pendPh){await idb.put({id:g.id,nid:n.id,blob:g.blob,w:g.w,h:g.h,at:now},'photos');n.ph.push({id:g.id,sz:g.sz})}}catch(e){toast('無法儲存照片到這台裝置');return}
     if(!await saveNote(n))return;
-    notes.push(n);drawNotes();closeSheet();toast('已新增註記');
+    notes.push(n);drawNotes();closeSheet();toast('已新增註記'+(n.par?'（地號 '+n.par.no+'）':''));
   });
 }
 $('#addBtn').addEventListener('click',startAdd);
@@ -1424,21 +1556,38 @@ function goNote(n){map.fitBounds(L.latLngBounds(n.ll,n.ll),Object.assign({maxZoo
 function showNote(n,editing){
   selPoint(n.ll);
   const fmt=t=>new Date(t).toLocaleString('zh-TW',{dateStyle:'short',timeStyle:'short'});
-  openSheet('note',headHtml('註記',fmt(n.up))+'<p class="hint">只存在這台裝置</p>'+
+  const ph=n.ph||[];
+  const parH=n.par?'<p class="hint">地號 <b style="color:var(--fg)">'+esc(n.par.no)+'</b>（'+esc(n.par.sl)+'）</p>':'';
+  openSheet('note',headHtml('註記',fmt(n.up))+
     (editing?'<textarea class="in" id="nTxt" maxlength="500">'+esc(n.t)+'</textarea><div class="btns"><button class="btn" id="nCancel">取消</button><button class="btn pri" id="nSave">儲存</button></div>'
-      :'<div class="ntxt">'+esc(n.t)+'</div><p class="hint">建立 '+fmt(n.at)+(n.up!==n.at?'・修改 '+fmt(n.up):'')+'</p>'+
-       '<div class="btns"><button class="btn" id="nEdit">修改</button><button class="btn" id="nCp">複製文字</button><a class="btn" target="_blank" rel="noopener" href="'+navUrl(n.ll)+'">導航</a></div>'+
-       '<div class="btns"><button class="btn dng" id="nDel">刪除</button></div>'));
+      :'<div class="ntxt">'+esc(n.t)+'</div>'+parH+
+       (ph.length?'<div class="phs" id="nPhs">'+ph.map((x,i)=>'<div class="ph"><img data-pv="'+i+'" alt=""><button class="rm" data-pd="'+i+'" aria-label="刪除照片">×</button></div>').join('')+'</div>':'')+
+       '<p class="hint">只存在這台裝置・建立 '+fmt(n.at)+(n.up!==n.at?'・修改 '+fmt(n.up):'')+(ph.length?'・照片 '+ph.length+' 張':'')+'</p>'+
+       '<div class="btns"><button class="btn" id="nEdit">修改文字</button><button class="btn" id="nPhAdd"'+(ph.length>=PH_MAX?' disabled':'')+'>選照片</button><button class="btn" data-find>找點</button></div>'+
+       '<div class="btns"><button class="btn" id="nCp">複製文字</button><a class="btn" target="_blank" rel="noopener" href="'+navUrl(n.ll)+'">導航</a><button class="btn dng" id="nDel">刪除</button></div>'));
   if(editing){
     $('#nCancel').addEventListener('click',()=>showNote(n));
     $('#nSave').addEventListener('click',async()=>{const t=$('#nTxt').value.trim();if(!t){toast('請輸入註記文字');return}const o={t:n.t,up:n.up};n.t=t;n.up=Date.now();if(!await saveNote(n)){Object.assign(n,o);return}drawNotes();showNote(n);toast('已修改')});
     setTimeout(()=>$('#nTxt')&&$('#nTxt').focus(),50);return;
   }
+  const q=toTM2(n.lat,n.lng);bindFind({n:'註記 '+noteHead(n.t,8),N:q.N,E:q.E,ll:n.ll});
+  if(ph.length){
+    const urls=[];
+    (async()=>{for(let i=0;i<ph.length;i++){let r=null;try{r=await idb.get(ph[i].id,'photos')}catch(e){}if(sheetKind!=='note')return;const img=$('#sheet [data-pv="'+i+'"]');if(!img)return;if(r&&r.blob){urls[i]=phUrl(r.blob);img.src=urls[i]}else img.alt='照片遺失'}})();
+    $('#sheet').querySelectorAll('[data-pv]').forEach(im=>im.addEventListener('click',()=>{const u=urls.filter(Boolean);if(u.length)openViewer(u,Math.max(0,u.indexOf(urls[+im.dataset.pv])))}));
+    $('#sheet').querySelectorAll('[data-pd]').forEach(b=>b.addEventListener('click',async()=>{
+      if(!confirm('刪除這張照片？'))return;const x=ph[+b.dataset.pd];
+      try{await idb.del(x.id,'photos')}catch(e){}
+      n.ph=ph.filter(y=>y!==x);n.up=Date.now();await saveNote(n);showNote(n);toast('已刪除照片');
+    }));
+  }
   $('#nEdit').addEventListener('click',()=>showNote(n,true));
+  $('#nPhAdd').addEventListener('click',()=>pickPhotos(n));
   $('#nCp').addEventListener('click',()=>copyText(n.t));
   $('#nDel').addEventListener('click',async()=>{
-    if(!confirm('刪除這則註記？\n「'+noteHead(n.t,20)+'」'))return;
+    if(!confirm('刪除這則註記？'+(ph.length?'（含 '+ph.length+' 張照片）':'')+'\n「'+noteHead(n.t,20)+'」'))return;
     try{await idb.del(n.id,'notes')}catch(e){}
+    for(const x of ph){try{await idb.del(x.id,'photos')}catch(e){}}
     notes=notes.filter(x=>x!==n);drawNotes();closeSheet();toast('已刪除註記');
   });
 }
@@ -1450,23 +1599,61 @@ function exportNotes(){
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
   toast('已匯出 '+notes.length+' 則註記');
 }
+/* ---- zip 輸出（不壓縮；照片本來就是 JPEG） ---- */
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=CRC_T[(c^u8[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+function buildZip(files){
+  const enc=new TextEncoder(),parts=[],cen=[];let off=0;
+  const d=new Date(),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+  for(const f of files){
+    const nm=enc.encode(f.name),crc=crc32(f.data),sz=f.data.length;
+    const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x800,true);h.setUint16(10,tm,true);h.setUint16(12,dt,true);h.setUint32(14,crc,true);h.setUint32(18,sz,true);h.setUint32(22,sz,true);h.setUint16(26,nm.length,true);
+    parts.push(new Uint8Array(h.buffer),nm,f.data);
+    const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x800,true);c.setUint16(12,tm,true);c.setUint16(14,dt,true);c.setUint32(16,crc,true);c.setUint32(20,sz,true);c.setUint32(24,sz,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+    cen.push(new Uint8Array(c.buffer),nm);off+=30+nm.length+sz;
+  }
+  const cs=cen.reduce((a,u)=>a+u.length,0),e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+  return new Blob(parts.concat(cen,[new Uint8Array(e.buffer)]),{type:'application/zip'});
+}
+function dlBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
+async function exportNotesZip(){
+  if(!notes.length)return;
+  const d=new Date(),ymd=d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate());
+  const list=notes.slice().sort((a,b)=>a.at-b.at),files=[{name:'notes.csv',data:new TextEncoder().encode(buildNotesCsv(list))}];
+  $('#busy').hidden=false;let miss=0;
+  try{for(let i=0;i<list.length;i++){const ph=list[i].ph||[];for(let k=0;k<ph.length;k++){let r=null;try{r=await idb.get(ph[k].id,'photos')}catch(e){}if(!r||!r.blob){miss++;continue}files.push({name:'photos/'+(i+1)+'_'+(k+1)+'.jpg',data:new Uint8Array(await r.blob.arrayBuffer())})}}
+    dlBlob(buildZip(files),'notes_'+ymd+'.zip');
+  }finally{$('#busy').hidden=true}
+  toast('已匯出 '+list.length+' 則註記、'+(files.length-1)+' 張照片'+(miss?'（'+miss+' 張找不到）':''),3500);
+}
 $('#noteIn').addEventListener('change',async e=>{
   const f=e.target.files[0];if(!f)return;
-  let add=0,dup=0,out=0;
+  let add=0,dup=0,out=0,phN=0,phMiss=0;
+  $('#busy').hidden=false;
   try{
-    const r=parseNotesCsv(decodeText(new Uint8Array(await f.arrayBuffer())));
+    const buf=await f.arrayBuffer();let text,pm=new Map();
+    if(/\.zip$/i.test(f.name)||new Uint8Array(buf,0,Math.min(4,buf.byteLength)).join()==='80,75,3,4'){
+      const zf=await readZip(buf);const cf=zf.find(z=>/\.csv$/i.test(z.name));if(!cf)throw new Error('zip 裡沒有 CSV');
+      text=decodeText(cf.data);for(const z of zf)if(/\.(jpe?g|png|webp)$/i.test(z.name))pm.set(z.name.replace(/^.*\//,''),z.data);
+    }else text=decodeText(new Uint8Array(buf));
+    const r=parseNotesCsv(text);
     if(!r.list.length)throw new Error('檔案裡沒有可用的註記（每列要有 N、E 與註記文字）');
     const have=notes.map(n=>Object.assign(toTM2(n.lat,n.lng),{t:n.t}));
     for(const q of r.list){
       const ll=fromTM2(q.N,q.E);
       if(!inTaiwan(ll.lat,ll.lng)){out++;continue}
       if(have.some(h=>h.t===q.t&&Math.hypot(h.N-q.N,h.E-q.E)<=0.01)){dup++;continue}
-      const now=Date.now(),n={id:newId(),t:q.t,lat:r7(ll.lat),lng:r7(ll.lng),at:q.at||now,up:q.at||now};n.ll=[n.lat,n.lng];
+      const now=Date.now(),n={id:newId(),t:q.t,lat:r7(ll.lat),lng:r7(ll.lng),at:q.at||now,up:q.at||now,ph:[]};n.ll=[n.lat,n.lng];
+      n.par=parOf(n.lat,n.lng)||(q.par?{no:q.par,sl:''}:null);
+      for(const nm of q.ph.slice(0,PH_MAX)){const u=pm.get(nm.replace(/^.*\//,''));if(!u){phMiss++;continue}
+        const id=phId();try{await idb.put({id,nid:n.id,blob:new Blob([u],{type:'image/jpeg'}),at:now},'photos');n.ph.push({id,sz:u.length});phN++}catch(err){phMiss++}}
       if(await saveNote(n)){notes.push(n);have.push({N:q.N,E:q.E,t:q.t});add++}
     }
+    $('#busy').hidden=true;
     if(!ly.note)setLy('note',true);
-    drawNotes();openLayers('已匯入 '+add+' 則註記'+(dup?'（'+dup+' 則重複略過）':'')+(out?'（'+out+' 則坐標不在台灣範圍）':'')+(r.bad?'（'+r.bad+' 列缺資料略過）':''),add?'ok':'');
-  }catch(err){openLayers('✗ 匯入註記失敗：'+(err.message||err),'bad')}
+    drawNotes();openLayers('已匯入 '+add+' 則註記'+(phN?'、'+phN+' 張照片':'')+(dup?'（'+dup+' 則重複略過）':'')+(out?'（'+out+' 則坐標不在台灣範圍）':'')+(r.bad?'（'+r.bad+' 列缺資料略過）':'')+(phMiss?'（'+phMiss+' 張照片找不到）':''),add?'ok':'');
+  }catch(err){$('#busy').hidden=true;openLayers('✗ 匯入註記失敗：'+(err.message||err),'bad')}
 });
 
 /* ---------- v1.8：長按註記旗子 0.8 秒拖曳，放開後確認（比照選點頁） ---------- */
@@ -1534,8 +1721,9 @@ function askNoteMove(n,o,nw){
   $('#mvYes').addEventListener('click',async()=>{
     const m=nMove;if(!m)return;nMove=null;clearNMv();mode='';
     const old={lat:m.n.lat,lng:m.n.lng,up:m.n.up};
-    m.n.lat=r7(m.nw[0]);m.n.lng=r7(m.nw[1]);m.n.up=Date.now();m.n.ll=[m.n.lat,m.n.lng];
-    if(!await saveNote(m.n)){Object.assign(m.n,old);m.n.ll=[old.lat,old.lng]}
+    const op=m.n.par;
+    m.n.lat=r7(m.nw[0]);m.n.lng=r7(m.nw[1]);m.n.up=Date.now();m.n.ll=[m.n.lat,m.n.lng];m.n.par=parOf(m.n.lat,m.n.lng);
+    if(!await saveNote(m.n)){Object.assign(m.n,old);m.n.ll=[old.lat,old.lng];m.n.par=op}
     else toast('已移動註記');
     drawNotes();showNote(m.n);
   });
@@ -1609,8 +1797,9 @@ function msrPanel(){
 }
 $('#msrBtn').addEventListener('click',()=>{if(mode==='msr')msrEnd(false);else msrStart()});
 
-/* ---------- 定位（按一下開始持續追蹤，再按停止，5 分鐘自動停止） ---------- */
-let trk=null,locLayers=[];
+/* ---------- 定位（按一下開始持續追蹤，再按停止；5 分鐘自動停止，找點中 15 分鐘）
+   v1.9：上方橫幅顯示目前 TWD97 坐標與所在地號；羅盤方向扇形；找點（距離、方位、虛線） ---------- */
+let trk=null,locLayers=[],hdMk=null,hdOn=false,lastFix=null,findT=null,findLayers=[];
 function locBtnState(st){const b=$('#locBtn');b.classList.toggle('busy',st==='busy');b.classList.toggle('trk',st==='trk');b.disabled=st==='busy'}
 function clearLoc(){locLayers.forEach(l=>map.removeLayer(l));locLayers=[]}
 function gpsFail(kind){
@@ -1619,22 +1808,90 @@ function gpsFail(kind){
   else if(kind==='timeout')toast('定位逾時，請到空曠處再試一次');
   else toast('暫時無法取得位置，請確認手機定位已開啟');
 }
+/* 羅盤：iOS 需在按鈕事件內同步呼叫 requestPermission；Android 用 deviceorientationabsolute */
+function askHeading(){
+  const D=window.DeviceOrientationEvent;
+  if(D&&typeof D.requestPermission==='function'){try{D.requestPermission().then(r=>{if(r==='granted')hdListen();else toast('未允許方向權限，不顯示方向扇形')}).catch(()=>{})}catch(e){}}
+  else hdListen();
+}
+function hdListen(){if(hdOn)return;hdOn=true;if('ondeviceorientationabsolute' in window)window.addEventListener('deviceorientationabsolute',onHd);else window.addEventListener('deviceorientation',onHd)}
+function hdUnlisten(){hdOn=false;window.removeEventListener('deviceorientationabsolute',onHd);window.removeEventListener('deviceorientation',onHd)}
+function onHd(e){
+  let h=null;
+  if(typeof e.webkitCompassHeading==='number')h=e.webkitCompassHeading;
+  else if(e.alpha!=null&&(e.absolute||e.type==='deviceorientationabsolute'))h=360-e.alpha;
+  if(h==null||!trk||!hdMk)return;
+  const so=(screen.orientation&&typeof screen.orientation.angle==='number')?screen.orientation.angle:(window.orientation||0);
+  h=((h+so)%360+360)%360;
+  const el=hdMk.getElement(),svg=el&&el.querySelector('svg');
+  if(svg){svg.style.transform='rotate('+h.toFixed(1)+'deg)';el.style.visibility='visible'}
+}
+function hdMarker(ll){
+  if(!map.getPane('hdPane')){const pn=map.createPane('hdPane');pn.style.zIndex=399;pn.style.pointerEvents='none'}
+  hdMk=L.marker(ll,{pane:'hdPane',interactive:false,keyboard:false,icon:L.divIcon({className:'hd-ic',iconSize:[96,96],iconAnchor:[48,48],
+    html:'<svg viewBox="-48 -48 96 96"><defs><radialGradient id="hdg" cx="0" cy="0" r="46" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2563eb" stop-opacity=".55"/><stop offset="1" stop-color="#2563eb" stop-opacity="0"/></radialGradient></defs><path d="M0 0L-23 -39.8A46 46 0 0 1 23 -39.8Z" fill="url(#hdg)"/></svg>'})}).addTo(map);
+  const el=hdMk.getElement();if(el)el.style.visibility='hidden';
+}
+function armTimer(t){clearTimeout(t.timer);const ms=findT?900000:300000;t.timer=setTimeout(()=>{if(trk===t){stopTrack();toast('已追蹤 '+ms/60000+' 分鐘，自動停止定位')}},ms)}
 function startTrack(){
   if(!window.isSecureContext||!navigator.geolocation){gpsFail('unsupported');return}
+  askHeading();
   locBtnState('busy');
-  const t={wid:null,timer:null,first:true};trk=t;
-  t.wid=navigator.geolocation.watchPosition(p=>{
-    if(trk!==t)return;const c=p.coords,ll=[c.latitude,c.longitude];
-    clearLoc();
-    locLayers.push(L.circle(ll,{radius:Math.max(c.accuracy||5,3),color:'#2563eb',weight:1,fillColor:'#2563eb',fillOpacity:.15,interactive:false}).addTo(map));
-    locLayers.push(L.circleMarker(ll,{radius:7,color:'#fff',weight:2,fillColor:'#2563eb',fillOpacity:1,interactive:false}).addTo(map));
-    if(t.first){t.first=false;locBtnState('trk');map.setView(ll,Math.max(map.getZoom(),18));toast('持續定位中（再按一次停止），精度約 ±'+Math.round(c.accuracy)+' m')}
-  },err=>{if(trk!==t)return;const k=err.code===1?'denied':err.code===3?'timeout':'unavailable';if(t.first||k==='denied'){stopTrack();gpsFail(k)}},
+  const t={wid:null,timer:null,first:true};trk=t;renderBar();
+  t.wid=navigator.geolocation.watchPosition(p=>{if(trk===t)onFix(t,p.coords)},err=>{if(trk!==t)return;const k=err.code===1?'denied':err.code===3?'timeout':'unavailable';if(t.first||k==='denied'){stopTrack();gpsFail(k)}},
   {enableHighAccuracy:true,timeout:25000,maximumAge:0});
-  t.timer=setTimeout(()=>{if(trk===t){stopTrack();toast('已追蹤 5 分鐘，自動停止定位')}},300000);
+  armTimer(t);
 }
-function stopTrack(){const t=trk;trk=null;if(t){if(t.wid!=null)navigator.geolocation.clearWatch(t.wid);clearTimeout(t.timer)}clearLoc();locBtnState('')}
+function onFix(t,c){
+  const ll=[c.latitude,c.longitude];lastFix={ll,acc:c.accuracy||0};
+  clearLoc();
+  locLayers.push(L.circle(ll,{radius:Math.max(c.accuracy||5,3),color:'#2563eb',weight:1,fillColor:'#2563eb',fillOpacity:.15,interactive:false}).addTo(map));
+  locLayers.push(L.circleMarker(ll,{radius:7,color:'#fff',weight:2,fillColor:'#2563eb',fillOpacity:1,interactive:false}).addTo(map));
+  if(hdMk)hdMk.setLatLng(ll);else hdMarker(ll);
+  if(t.first){t.first=false;locBtnState('trk');
+    if(findT)map.fitBounds(L.latLngBounds([ll,findT.ll]).pad(.3),{maxZoom:19,animate:false});else map.setView(ll,Math.max(map.getZoom(),18));
+    toast('持續定位中（再按一次停止），精度約 ±'+Math.round(c.accuracy)+' m')}
+  drawFind();renderBar();
+}
+function stopTrack(){const t=trk;trk=null;if(t){if(t.wid!=null)navigator.geolocation.clearWatch(t.wid);clearTimeout(t.timer)}clearLoc();if(hdMk){map.removeLayer(hdMk);hdMk=null}hdUnlisten();lastFix=null;findT=null;drawFind();renderBar();locBtnState('')}
 $('#locBtn').addEventListener('click',()=>{if(trk)stopTrack();else startTrack()});
+/* 找點 */
+const DIR8=['北','東北','東','東南','南','西南','西','西北'];
+function findInfo(){
+  if(!findT||!lastFix)return null;
+  const me=toTM2(lastFix.ll[0],lastFix.ll[1]),dN=findT.N-me.N,dE=findT.E-me.E,d=Math.hypot(dN,dE);
+  const az=((Math.atan2(dE,dN)*180/Math.PI)+360)%360;
+  return{d,az,dir:DIR8[Math.round(az/45)%8]};
+}
+function drawFind(){
+  findLayers.forEach(l=>map.removeLayer(l));findLayers=[];if(!findT)return;
+  findLayers.push(L.circleMarker(findT.ll,{pane:'selPane',radius:13,color:'#2563eb',weight:3,fill:false,interactive:false}).addTo(map));
+  const fi=findInfo();if(!fi)return;
+  findLayers.push(L.polyline([lastFix.ll,findT.ll],{pane:'selPane',color:'#2563eb',weight:2.5,dashArray:'7 6',interactive:false}).addTo(map));
+  findLayers.push(L.marker([(lastFix.ll[0]+findT.ll[0])/2,(lastFix.ll[1]+findT.ll[1])/2],{pane:'lbPane',interactive:false,keyboard:false,icon:L.divIcon({className:'lb fdl',iconSize:[0,0],html:'<span>'+fmtLen(fi.d)+'</span>'})}).addTo(map));
+}
+function startFind(t){
+  findT=t;closeSheet();
+  if(!trk)startTrack();else{armTimer(trk);if(lastFix)map.fitBounds(L.latLngBounds([lastFix.ll,t.ll]).pad(.3),{maxZoom:19,animate:false})}
+  drawFind();renderBar();toast('找點：'+t.n+'，跟著藍色虛線走；手機 GPS 約有 ±3～10 m 誤差',4000);
+}
+function endFind(){findT=null;drawFind();if(trk)armTimer(trk);renderBar()}
+function bindFind(t){const b=$('#sheet [data-find]');if(b)b.addEventListener('click',()=>startFind(t))}
+/* 上方定位橫幅 */
+function renderBar(){
+  const bar=$('#locBar');
+  if(!trk){bar.hidden=true;bar.innerHTML='';return}
+  bar.hidden=false;
+  const endB=findT?'<button class="bs" id="fdEnd">結束找點</button>':'';
+  if(!lastFix){bar.innerHTML='<div class="r"><span>定位中…'+(findT?'（找 '+esc(findT.n)+'）':'')+'</span>'+endB+'</div>';const e=$('#fdEnd');if(e)e.addEventListener('click',endFind);return}
+  const q=toTM2(lastFix.ll[0],lastFix.ll[1]),h=sets.length?parcelAt(lastFix.ll[0],lastFix.ll[1],true):null,fi=findInfo();
+  bar.innerHTML='<div class="r"><span class="mono">N '+q.N.toFixed(2)+'　E '+q.E.toFixed(2)+'　±'+Math.round(lastFix.acc)+' m</span><button class="bs" id="lbCp">複製</button></div>'+
+    (sets.length?'<div class="r"><span>'+(h?'所在 <button class="par" id="lbPar">地號 '+esc(parLabel(h))+'</button>（'+esc(h.s.label)+'）':'不在已匯入的宗地內')+'</span></div>':'')+
+    (fi?'<div class="r fd2'+(fi.d<=3?' near':'')+'"><span>找 <b>'+esc(findT.n)+'</b>・<b>'+fmtLen(fi.d)+'</b>・'+fi.dir+' '+Math.round(fi.az)+'°'+(fi.d<=3?'<br>已在 GPS 誤差範圍內，請用儀器確認':'')+'</span>'+endB+'</div>':'');
+  $('#lbCp').addEventListener('click',()=>copyText(q.N.toFixed(2)+','+q.E.toFixed(2)));
+  const pb=$('#lbPar');if(pb)pb.addEventListener('click',()=>showParcel(h.s,h.p));
+  const e=$('#fdEnd');if(e)e.addEventListener('click',endFind);
+}
 
 /* ---------- 啟動 ---------- */
 (async()=>{
@@ -1652,7 +1909,7 @@ $('#locBtn').addEventListener('click',()=>{if(trk)stopTrack();else startTrack()}
   map.on('moveend',()=>{const c=map.getCenter();store.set('cv_view',JSON.stringify([+c.lat.toFixed(6),+c.lng.toFixed(6),map.getZoom()]))});
   const had=!!store.get('cv_view');await cc;if(!had&&!v&&allBounds())fitAll();
 })();
-window.__cv={get notes(){return notes},setLy,setSv,sv,showNote,rpNo,buildNotesCsv,parseNotesCsv,parseCsv,oldNo,get msr(){return msr},get ctlFiles(){return ctlFiles},cloud,cloudConnect,map,get sets(){return sets},get known(){return known},handleTap,searchAll,parseQuery,buildSet,parseDbf,parseCtl,ctlMeta,mergeKnown,inRings};
+window.__cv={get notes(){return notes},parcelAt,startFind,endFind,get findT(){return findT},onFix:(c)=>{if(trk)onFix(trk,c)},buildZip,crc32,procPhoto,setLy,setSv,sv,showNote,rpNo,buildNotesCsv,parseNotesCsv,parseCsv,oldNo,get msr(){return msr},get ctlFiles(){return ctlFiles},cloud,cloudConnect,map,get sets(){return sets},get known(){return known},handleTap,searchAll,parseQuery,buildSet,parseDbf,parseCtl,ctlMeta,mergeKnown,inRings};
 if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
 </script>
 </body>
