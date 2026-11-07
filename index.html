@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
-/* 地籍瀏覽器（v1.9：新增註記面板精簡＋地號、已知點／補點／註記選色、定位橫幅（坐標＋所在地號＋羅盤）、找點、註記照片；v1.8：宗地詳細頁改版、每段宗地線選色、註記 CSV、註記長按拖曳、CTL 匯入與分享、量距與面積；v1.7：上方「宗地」「點位」點選開關、點號八方向避讓；v1.6，獨立 repo 的 index.html）：全螢幕地圖、頂部狀態列與圖層切換、右側按鈕、底部面板 */
+/* 地籍瀏覽器（v1.9.1：圖層色點縮小同一行靠右、補點改名；v1.9：新增註記面板精簡＋地號、已知點／補點／註記選色、定位橫幅（坐標＋所在地號＋羅盤）、找點、註記照片；v1.8：宗地詳細頁改版、每段宗地線選色、註記 CSV、註記長按拖曳、CTL 匯入與分享、量距與面積；v1.7：上方「宗地」「點位」點選開關、點號八方向避讓；v1.6，獨立 repo 的 index.html）：全螢幕地圖、頂部狀態列與圖層切換、右側按鈕、底部面板 */
 :root{
   --bg:#f1f3ef; --surface:#ffffff; --fg:#17211c; --muted:#5b6861; --line:#d3dad4;
   --accent:#2b4c7e; --accent-fg:#ffffff; --sel:#e8590c; --danger:#c22a2a;
@@ -136,10 +136,13 @@ table.kv tr+tr th,table.kv tr+tr td{border-top:1px solid var(--line)}
 details.more summary{cursor:pointer;min-height:40px;display:flex;align-items:center;font-weight:700;color:var(--accent)}
 details.more table.kv{margin-top:2px}
 /* v1.8：每段宗地線顏色 */
-.cols{display:flex;gap:10px;align-items:center;min-height:44px;flex-wrap:wrap}
-.cols .lbl{font-size:14px;margin-right:2px}
-.sw{width:30px;height:30px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);padding:0}
-.sw[aria-pressed="true"]{box-shadow:0 0 0 2.5px var(--fg)}
+.row2{display:flex;align-items:center;gap:6px}
+.row2>.row{flex:1;min-width:0}
+.row2>.row span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sws{display:flex;gap:2px;flex:none;margin-left:auto}
+.sw{width:26px;height:30px;border:0;background:none;padding:3px;display:grid;place-items:center;flex:none}
+.sw i{display:block;width:20px;height:20px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.sw[aria-pressed="true"] i{box-shadow:0 0 0 2px var(--fg)}
 /* v1.8：量距 */
 #msrBtn.on{background:var(--accent);border-color:var(--accent)}#msrBtn.on svg{stroke:var(--accent-fg)}
 .lb.ms span{transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:#17211c;background:rgba(255,255,255,.92);border-radius:4px;padding:1px 4px;box-shadow:0 1px 2px rgba(0,0,0,.35)}
@@ -194,7 +197,7 @@ details.bpl th{font-family:var(--font);color:var(--muted);font-weight:500}
 .fd .tw .grow{flex:1;min-width:0}
 .fd .tw .sub{font-size:12px;color:var(--muted)}
 .fd.off .tw b{color:var(--muted)}
-.fd .bd{border-top:1px solid var(--line);padding:4px 12px 10px 44px}
+.fd .bd{border-top:1px solid var(--line);padding:4px 10px 10px 26px}
 .fd .bd .row{min-height:40px}
 .fd .bd .btns{margin-top:6px}
 #toast{position:fixed;z-index:1400;left:16px;right:16px;top:calc(env(safe-area-inset-top,0px) + 112px);margin:auto;max-width:420px;background:var(--fg);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:14px;line-height:1.5;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -876,7 +879,9 @@ const PAL={known:[['#c2255c','洋紅']].concat(OTHER_COLS),note:[['#e8590c','橘
 const colIdx=k=>{const v=parseInt(store.get('cv_col_'+k)||'0',10);return v>=0&&v<6?v:0};
 const knownCol=()=>PAL.known[colIdx('known')][0],noteCol=()=>PAL.note[colIdx('note')][0];
 const ctlCol=s=>(PAL.ctl[sv(s).ccol]||PAL.ctl[0])[0];
-const swHtml=(pal,cur,attr)=>'<div class="cols"><span class="lbl">顏色</span>'+pal.map((c,i)=>'<button class="sw" type="button" '+attr+' data-ci="'+i+'" aria-label="'+c[1]+'色" aria-pressed="'+(cur===i)+'" style="background:'+c[0]+'"></button>').join('')+'</div>';
+/* v1.9.1：色點縮小、與圖層名稱同一行並靠右（swHtml 回傳色點串；withSw 把勾選列和色點包成一行） */
+const swHtml=(pal,cur,attr)=>'<span class="sws">'+pal.map((c,i)=>'<button class="sw" type="button" '+attr+' data-ci="'+i+'" aria-label="'+c[1]+'色" aria-pressed="'+(cur===i)+'"><i style="background:'+c[0]+'"></i></button>').join('')+'</span>';
+const withSw=(row,sw)=>sw?'<div class="row2">'+row+sw+'</div>':row;
 let svAll={};try{svAll=JSON.parse(store.get('cv_sv')||'{}')||{}}catch(e){svAll={}}
 const svOpen=new Set();
 function sv(s){let o=svAll[s.id];if(!o){o=svAll[s.id]=Object.assign({},SV_DEF)}for(const k in SV_DEF)if(o[k]==null)o[k]=SV_DEF[k];return o}
@@ -1286,19 +1291,17 @@ function openLayers(msg,cls){
   const fold=s=>{const o=sv(s),op=svOpen.has(s.id);
     return '<div class="fd'+(o.on?'':' off')+'"><div class="hd"><input type="checkbox" aria-label="顯示整段" data-sv="'+esc(s.id)+'" data-svk="on"'+(o.on?' checked':'')+'>'+
       '<button class="tw" data-op="'+esc(s.id)+'" aria-expanded="'+op+'"><span class="ar">'+(op?'▾':'▸')+'</span><span class="grow"><b>'+esc(s.label)+'</b>'+(s.shared?'<span class="tagc">全組</span>':'<span class="tagl">只在本機</span>')+(s.fmt==='fz'?'<span class="tagl">複丈檔</span>':'')+
-      '<div class="sub">'+s.parcels.length+' 筆宗地'+(s.bpts?'・界址點 '+s.bpts.length:'')+(s.rpts?'・參考點 '+s.rpts.length:'')+(s.ctl.length?'・補點 '+s.ctl.length:'')+'・'+new Date(s.shared?s.v:s.at).toLocaleDateString('zh-TW')+(s.shared?' 更新':' 匯入')+'</div></span></button></div>'+
-      (op?'<div class="bd">'+sub(s,'cad','宗地界線','lg-cad" style="border-color:'+setCol(s))+
-        '<div class="cols"><span class="lbl">線色</span>'+CAD_COLS.map((c,i)=>'<button class="sw" type="button" data-col="'+i+'" data-cs="'+esc(s.id)+'" aria-label="'+c[1]+'色" aria-pressed="'+(sv(s).col===i)+'" style="background:'+c[0]+'"></button>').join('')+'</div>'+sub(s,'lab','地號','','舊地號，zoom 18 以上')+sub(s,'nlab','新地號','','舊地號下一行，例 N101')+
+      '<div class="sub">'+s.parcels.length+' 筆宗地'+(s.bpts?'・界址點 '+s.bpts.length:'')+(s.rpts?'・參考點 '+s.rpts.length:'')+(s.ctl.length?'・補點（D20）'+s.ctl.length:'')+'・'+new Date(s.shared?s.v:s.at).toLocaleDateString('zh-TW')+(s.shared?' 更新':' 匯入')+'</div></span></button></div>'+
+      (op?'<div class="bd">'+withSw(sub(s,'cad','宗地界線','lg-cad" style="border-color:'+setCol(s)),swHtml(CAD_COLS,sv(s).col,'data-cs="'+esc(s.id)+'"'))+sub(s,'lab','地號','','舊地號，zoom 18 以上')+sub(s,'nlab','新地號','','舊地號下一行，例 N101')+
         sub(s,'bp','界址點','lg-bp',s.bpts?'zoom 19 以上，20 顯示點號':'舊版匯入，請重新匯入',!s.bpts)+
         sub(s,'rp','參考點','lg-rp',s.rpts?'zoom 19 以上，20 顯示點號':'舊版匯入，請重新匯入',!s.rpts)+
-        sub(s,'ctl','補點（D20）','lg-ct" style="--lgc:'+ctlCol(s),s.ctl.length?'':(s.fmt==='fz'?'複丈檔沒有補點':'這一段沒有 D20'),!s.ctl.length)+
-        (s.ctl.length?swHtml(PAL.ctl,sv(s).ccol,'data-cc="'+esc(s.id)+'"'):'')+
+        withSw(sub(s,'ctl','補點','lg-ct" style="--lgc:'+ctlCol(s),s.ctl.length?'':(s.fmt==='fz'?'複丈檔沒有補點':'這一段沒有 D20'),!s.ctl.length),s.ctl.length?swHtml(PAL.ctl,sv(s).ccol,'data-cc="'+esc(s.id)+'"'):'')+
         '<div class="btns">'+setBtns(s)+'</div></div>':'')+'</div>'};
   const setsH=sets.length?sets.map(fold).join(''):'<div class="empty" style="border:1px solid var(--line);border-radius:12px">還沒有匯入地籍圖</div>';
   openSheet('layers',headHtml('圖層與資料')+
     '<div><p class="label">圖層</p>'+
-    chk('known','已知點','lg-kn" style="background:none;clip-path:polygon(50% 0,100% 100%,0 100%);background-color:'+knownCol())+swHtml(PAL.known,colIdx('known'),'data-gk="known"')+
-    chk('note','註記','lg-note" style="--lgc:'+noteCol())+swHtml(PAL.note,colIdx('note'),'data-gk="note"')+
+    withSw(chk('known','已知點','lg-kn" style="background:none;clip-path:polygon(50% 0,100% 100%,0 100%);background-color:'+knownCol()),swHtml(PAL.known,colIdx('known'),'data-gk="known"'))+
+    withSw(chk('note','註記','lg-note" style="--lgc:'+noteCol()),swHtml(PAL.note,colIdx('note'),'data-gk="note"'))+
     chk('sect','段籍圖（國土測繪中心）')+'</div>'+
     '<div><p class="label">已知點(CTL)</p>'+files+'</div>'+
     '<div><p class="label">註記（只存在這台裝置）</p>'+(notes.length?'<ul class="list">'+notes.slice().sort((a,b)=>b.up-a.up).map(n=>'<li><button class="go" data-n="'+esc(n.id)+'"><b>'+esc(noteHead(n.t,20))+'</b><small>'+new Date(n.up).toLocaleString('zh-TW',{dateStyle:'short',timeStyle:'short'})+'</small></button></li>').join('')+'</ul>':'<div class="empty" style="border:1px solid var(--line);border-radius:12px">還沒有註記。按下方「＋ 新增註記」。</div>')+
@@ -1345,7 +1348,7 @@ function openLayers(msg,cls){
   sh.querySelectorAll('[data-n]').forEach(b=>b.addEventListener('click',()=>{const n=notes.find(x=>x.id===b.dataset.n);if(n)goNote(n)}));
   $('#nExp').addEventListener('click',exportNotes);
   $('#nImp').addEventListener('click',()=>{$('#noteIn').value='';$('#noteIn').click()});
-  sh.querySelectorAll('[data-col]').forEach(b=>b.addEventListener('click',()=>{const s=sets.find(x=>x.id===b.dataset.cs);if(!s)return;sv(s).col=+b.dataset.col;store.set('cv_sv',JSON.stringify(svAll));drawSets();openLayersKeep()}));
+  sh.querySelectorAll('[data-cs]').forEach(b=>b.addEventListener('click',()=>{const s=sets.find(x=>x.id===b.dataset.cs);if(!s)return;sv(s).col=+b.dataset.ci;store.set('cv_sv',JSON.stringify(svAll));drawSets();openLayersKeep()}));
   sh.querySelectorAll('[data-cc]').forEach(b=>b.addEventListener('click',()=>{const s=sets.find(x=>x.id===b.dataset.cc);if(!s)return;sv(s).ccol=+b.dataset.ci;store.set('cv_sv',JSON.stringify(svAll));drawSets();updateLabels();openLayersKeep()}));
   sh.querySelectorAll('[data-gk]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.gk;store.set('cv_col_'+k,b.dataset.ci);if(k==='known')drawKnown();else drawNotes();updateLabels();openLayersKeep()}));
   $('#nZip').addEventListener('click',exportNotesZip);
