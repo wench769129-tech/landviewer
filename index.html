@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
-/* 地籍瀏覽器（v1.9.1：圖層色點縮小同一行靠右、補點改名；v1.9：新增註記面板精簡＋地號、已知點／補點／註記選色、定位橫幅（坐標＋所在地號＋羅盤）、找點、註記照片；v1.8：宗地詳細頁改版、每段宗地線選色、註記 CSV、註記長按拖曳、CTL 匯入與分享、量距與面積；v1.7：上方「宗地」「點位」點選開關、點號八方向避讓；v1.6，獨立 repo 的 index.html）：全螢幕地圖、頂部狀態列與圖層切換、右側按鈕、底部面板 */
+/* 地籍瀏覽器（v1.9.2：同一舊地號被分幅切成多塊時各塊分開畫；v1.9.1：圖層色點縮小同一行靠右、補點改名；v1.9：新增註記面板精簡＋地號、已知點／補點／註記選色、定位橫幅（坐標＋所在地號＋羅盤）、找點、註記照片；v1.8：宗地詳細頁改版、每段宗地線選色、註記 CSV、註記長按拖曳、CTL 匯入與分享、量距與面積；v1.7：上方「宗地」「點位」點選開關、點號八方向避讓；v1.6，獨立 repo 的 index.html）：全螢幕地圖、頂部狀態列與圖層切換、右側按鈕、底部面板 */
 :root{
   --bg:#f1f3ef; --surface:#ffffff; --fg:#17211c; --muted:#5b6861; --line:#d3dad4;
   --accent:#2b4c7e; --accent-fg:#ffffff; --sel:#e8590c; --danger:#c22a2a;
@@ -464,21 +464,26 @@ function buildSet(stem,f){
       an:r.AREA_NEW,ao:r.AREA_OLD,cn:r.CATE_NEW||'',co:r.CATE_OLD||'',g:r.GRADE,b:r.BELONG,inv:r.INVES,u:r.USING,ow:r.OWNERS,
       cy:r.CENTER_Y,cx:r.CENTER_X,np:0,r:[],bb:null,c:null};
     parcels.push(p);
-    if(p.so||p.om)byOld.set(p.so+'|'+p.om+'|'+p.oc,p);
+    if(p.so||p.om){const k=p.so+'|'+p.om+'|'+p.oc;const a=byOld.get(k);if(a)a.push(p);else byOld.set(k,[p])}
     if(p.sn&&p.nm)byNew.set(p.sn+'|'+p.nm+'|'+p.nc,p);
   }
-  /* D13：同地號的紀錄依序串接成界址點串列 */
-  const seqs=new Map(),order=[];
+  /* D13：同地號的紀錄依序串接成界址點串列。
+     v1.9.2：宗地被分幅線切成好幾塊時，D11 同一舊地號有好幾列（各有新地號、面積），
+     D13 同地號的紀錄會分成不連續的幾段，第 i 段＝D11 該地號第 i 列；D11 只有一列時照舊全部串接 */
+  const seqs=new Map(),order=[],cnt=new Map();let pk=null,ck=null;
   for(const r of R13){
     const k=r.O_SECTION+'|'+r.O_PARCEL+'|'+r.O_PARCEL_E;
-    let s=seqs.get(k);if(!s){s=[];seqs.set(k,s);order.push(k)}
+    if(k!==pk){const n=cnt.get(k)||0,a=byOld.get(k);cnt.set(k,n+1);
+      const i=a&&a.length>1?Math.min(n,a.length-1):0;ck=k+'#'+i;
+      if(!seqs.has(ck)){seqs.set(ck,{k,i,s:[]});order.push(ck)}pk=k}
+    const s=seqs.get(ck).s;
     for(let i=1;i<=8;i++){const c=r['COORD_'+i];if(c)s.push({p:c,m:!!r['MIDARC_'+i]})}
   }
   let miss=0,orphan=0;
-  for(const k of order){
-    const p=byOld.get(k)||byNew.get(k);
+  for(const ckey of order){
+    const e=seqs.get(ckey),a=byOld.get(e.k),p=(a&&a[e.i])||byNew.get(e.k);
     if(!p){orphan++;continue}
-    const seq=seqs.get(k),rings=[];let cur=[];
+    const seq=e.s,rings=[];let cur=[];
     for(const it of seq){
       const xy=coord.get(it.p);if(!xy){miss++;continue}
       if(cur.length>=3&&it.p===cur[0].p){rings.push(cur);cur=[];continue}
